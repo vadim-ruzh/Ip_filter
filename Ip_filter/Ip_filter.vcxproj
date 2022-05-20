@@ -140,10 +140,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Ip_filter.cpp" />
+    <ClCompile Include="Ip_filter.h" />
     <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Ip_filter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

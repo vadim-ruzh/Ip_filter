@@ -21,11 +21,9 @@
     <ClCompile Include="Ip_filter.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Ip_filter.h">
+    <ClCompile Include="Ip_filter.h">
       <Filter>Файлы заголовков</Filter>
-    </ClInclude>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

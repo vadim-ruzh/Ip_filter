@@ -1,121 +1,72 @@
-#include "Ip_filter.h"
-#include <fstream>
-#include <sstream>
-#include <boost/numeric/conversion/cast.hpp>
+#include "Addresses.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/range/algorithm.hpp>
 
-
-namespace detail
+IpV4Address::IpV4Address(const std::string& str)
 {
-    template<typename IpIter>
-    std::string GlueIpToString(IpIter begin,IpIter end,const std::string& delim)
-    {
-        std::stringstream result;
-        for (; begin != end - 1; ++begin)
-        {
-            result << static_cast<unsigned int>(*begin);
-            result << delim.c_str();
-        }
-        result << static_cast<unsigned int>(*begin);
-
-        return result.str();
-    }
+	IpV4Address::SetAddress(str);
 }
 
-ip::v4::Address::Address(const std::string& source) noexcept(false) : addr_{}
+bool IpV4Address::IsLoopback() const
 {
-    FromString(source);
+    return mAddress[0] == 127;
 }
 
-void ip::v4::Address::FromString(const std::string& source)
+bool IpV4Address::IsBroadcast() const
+{
+    return mAddress[1] == 255 || mAddress[2] == 255 || mAddress[3] == 255;
+}
+
+void IpV4Address::SetAddress(const std::string& source)
 {
     std::vector<std::string> tokens;
-    boost::split(tokens, source, boost::is_any_of(delimiter_));
+    boost::split(tokens, source, boost::is_any_of(std::string{ mDelimiter }));
 
-    if (tokens.size() != addr_.size())
+    if (tokens.size() != mAddress.size())
     {
         throw std::runtime_error("The count of octets is incorrect");
     }
 
     try
     {
-        std::transform(tokens.begin(), tokens.end(), addr_.begin(),
-            [](const std::string& str)
-            {
-                return boost::numeric_cast<uint8_t>(stoul(str));
-            });
+        auto StrToUint = [](const std::string& str)
+        {
+	        return boost::numeric_cast<uint8_t>(stoul(str));
+        };
+
+        boost::copy(tokens | boost::adaptors::transformed(StrToUint),mAddress.begin());
     }
-    catch (boost::bad_numeric_cast& e)
+    catch (boost::bad_numeric_cast& )
     {
         throw std::runtime_error("The octet values are incorrect");
     }
+
 }
 
-std::string ip::v4::Address::ToString()
+std::string IpV4Address::GetAddress() const
 {
-    return detail::GlueIpToString(addr_.begin(), addr_.end(), delimiter_);
-}
-
-bool ip::v4::Address::IsLoopback()
-{
-    return addr_[0] == 127;
-}
-
-std::array<uint8_t, 4>& ip::v4::Address::Data() 
-{
-    return addr_;
-}
-
-
-
-
-/*
-
-ip::File_Reader::File_Reader(const std::string& pathToFile) : m_fs(pathToFile){}
-
-ip::File_Reader::~File_Reader()
-{
-	m_fs.close();
-}
-
-
-void ip::File_Reader::Search(const std::string& delim, const std::regex& regExpr, std::function<void(std::string)> callback) const
-{
-    std::stringstream fileData;
-    fileData << m_fs.rdbuf();
-
-    std::vector<std::string> lines;
-    boost::split(lines, fileData.str(), boost::is_any_of(delim), boost::token_compress_on);
-
-    for (auto line : lines)
+	std::stringstream buffer;
+    for (const uint8_t& a : mAddress)
     {
-        std::smatch buffer;
-        if (std::regex_search(line.cbegin(), line.cend(), buffer, regExpr))
-        {
-            callback(buffer.str());
-        }
+        buffer << static_cast<unsigned int>(a);
+        buffer << mDelimiter;
+    }
+
+    std::string result = buffer.str();
+    result.pop_back();
+    return result;
+}
+
+FileReader::FileReader(const std::string& pathToFile) : mFstrm(pathToFile)
+{
+    if(!mFstrm.is_open())
+    {
+        throw std::runtime_error("Failed to open file");
     }
 }
 
-*/
-
-void ip::SearchInFile(const std::string& path, const std::string& delim, const std::regex& regExpr,std::function<void(std::string)> callback)
+FileReader::~FileReader()
 {
-    std::ifstream m_fs(path);
-
-    std::stringstream fileData;
-    fileData << m_fs.rdbuf();
-
-    std::vector<std::string> lines;
-    boost::split(lines, fileData.str(), boost::is_any_of(delim));
-
-    for (auto line : lines)
-    {
-        std::smatch buffer;
-        if (std::regex_search(line.cbegin(), line.cend(), buffer, regExpr))
-        {
-            callback(buffer.str());
-        }
-    }
+    mFstrm.close();
 }
 

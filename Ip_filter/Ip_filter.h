@@ -1,81 +1,118 @@
 #pragma once
+#include <ostream>
 #include <array>
-#include <cstdint>
-#include <functional>
+#include <sstream>
+#include <boost/range/adaptors.hpp>
+#include <fstream>
 #include <regex>
-#include <string>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/algorithm/string.hpp>
 
 
-
-class Iip
+class IIpAddress
 {
 public:
-	virtual ~Iip() = default;
-	
-	virtual bool IsLoopback() = 0;
-	/* TODO
-	virtual bool IsMulticast() = 0;
-	*/
+	virtual ~IIpAddress() = default;
+	virtual bool IsLoopback() const = 0;
+	virtual bool IsBroadcast() const = 0;
 };
 
-
-class IFormat
+template <typename OctetType, std::size_t OctetNumber, char Delimiter>
+class BasicAddress
 {
 public:
-	virtual ~IFormat() = default;
-	virtual std::string ToString() = 0;
-	virtual void FromString(const std::string& source) = 0;
+	virtual ~BasicAddress() = default;
+
+	OctetType operator[](const std::size_t& NumberOfOctet) const
+	{
+		return mAddress[NumberOfOctet];
+	}
+
+	friend std::istream& operator>>(std::istream& is, BasicAddress& address)
+	{
+		std::string buffer;
+		is >> buffer;
+		address.SetAddress(buffer);
+
+		return is;
+	}
+	friend std::ostream& operator<<(std::ostream& os,const  BasicAddress& address)
+	{
+		os << address.GetAddress();
+		return os;
+	}
+
+	friend bool operator==(const BasicAddress& a1, const BasicAddress& a2)
+	{
+		return a1.mAddress == a2.mAddress;
+	}
+	friend bool operator!=(const BasicAddress& a1, const BasicAddress& a2)
+	{
+		return a1.mAddress != a2.mAddress;
+	}
+	friend bool operator<(const BasicAddress& a1, const BasicAddress& a2)
+	{
+		return a1.mAddress < a2.mAddress;
+	}
+	friend bool operator>(const BasicAddress& a1, const BasicAddress& a2)
+	{
+		return a1.mAddress > a2.mAddress;
+	}
+	friend bool operator<=(const BasicAddress& a1, const BasicAddress& a2)
+	{
+		return a1.mAddress <= a2.mAddress;
+	}
+	friend bool operator>=(const BasicAddress& a1, const BasicAddress& a2)
+	{
+		return a1.mAddress >= a2.mAddress;
+	}
+protected:
+	virtual std::string GetAddress() const = 0 ;
+	virtual void SetAddress(const std::string& source) = 0;
+	char mDelimiter{Delimiter};
+	std::array<OctetType, OctetNumber> mAddress{};
 };
 
-
-namespace ip
+class IpV4Address final : public BasicAddress<uint8_t, 4, '.'>, public IIpAddress
 {
-	namespace v4
+public:
+	IpV4Address(const std::string& str);
+
+	bool IsLoopback() const override;
+	bool IsBroadcast() const override;
+private:
+	void SetAddress(const std::string& source) override;
+	std::string GetAddress() const override ;
+};
+
+class FileReader
+{
+public:
+	FileReader(const std::string& pathToFile);
+	FileReader() = delete;
+	~FileReader();
+
+	template <typename OutputIterator>
+	void SearchByLines(const boost::regex& regExpr, OutputIterator& dest);
+private:
+	std::fstream mFstrm;
+};
+
+template <typename OutputIterator>
+void FileReader::SearchByLines(const boost::regex& regExpr, OutputIterator& dest)
+{
+	std::stringstream fileData;
+	fileData << mFstrm.rdbuf();
+
+	std::vector<std::string> lines;
+	boost::split(lines, fileData.str(), boost::is_any_of("\n"), boost::token_compress_on);
+
+	for (auto line : lines)
 	{
-		class Address final : public IFormat, Iip
+		boost::smatch buffer;
+		if (boost::regex_search(line.cbegin(), line.cend(), buffer, regExpr))
 		{
-		public:
-			explicit Address(const std::string& source) noexcept(false);
-
-			void FromString(const std::string& source) noexcept(false) override;
-			std::string ToString() override;
-
-			bool IsLoopback() override;
-
-			std::array<uint8_t, 4>& Data();
-		private:
-			std::string delimiter_{ "." };
-			std::array<uint8_t, 4> addr_;
-		};
-	}
-
-	/* TODO
-	namespace v6
-	{
-		class Address : public IFormat, Iip
-		{
-		public:
-			//bool IsLoopback() override;
-			//bool IsMulticast() override;
-			std::string ToString() override;
-			void FromString(const std::string& source) override;
-			std::array<uint16_t, 8> data();
-		private:
-			std::string delimiter_{ ":" };
-			uint16_t ConvertFromHexToDec(const std::string& hexValue);
-			std::array<uint16_t, 8> addr_;
-		};
-
-	}
-	*/
-
-	void SearchInFile(const std::string& path, const std::string& delim, const std::regex& regExpr, std::function<void(std::string)> callback);
-
-	template <typename T>
-	void SearchInFile(const std::string& path,const std::string& delim, const std::regex& regExpr, std::back_insert_iterator<T>& dest)
-	{
-		SearchInFile(path, delim, regExpr, [&dest](std::string str) {dest = str; });
+			dest = buffer.str();
+		}
 	}
 }
