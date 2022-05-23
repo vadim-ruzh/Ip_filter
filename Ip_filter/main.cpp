@@ -1,6 +1,6 @@
 #include <iostream>
-#include "Addresses.h"
 #include <boost/range/algorithm.hpp>
+#include "Ip_filter.h"
 
 using ipCollection = std::vector<IpV4Address>;
 
@@ -16,19 +16,19 @@ int main()
     FileReader fileReader(pathToFile);
     fileReader.SearchByLines(regExpr, backInsertAddresses);
 
-    boost::sort(addresses, [](const auto& a1, const auto& a2) {return a1 > a2; });
+    boost::range::sort(addresses, [](const auto& a1, const auto& a2) {return a1 > a2; });
 
     const std::ostream_iterator<IpV4Address> output(std::cout, "\n");
 
 
 	//список адресов первый байт которых равен 1
     const auto filter = [](const IpV4Address& ip) {return ip[0] == 1; };
-    boost::copy(addresses | boost::adaptors::filtered(filter),output);
+    boost::range::copy(addresses | boost::adaptors::filtered(filter),output);
     //список адресов первый байт которых равен 46, а второй 70
     const auto filter2 = [](const IpV4Address& ip) {return ip[0] == 46 && ip[1] == 70; };
-    boost::copy(addresses | boost::adaptors::filtered(filter2), output);
+    boost::range::copy(addresses | boost::adaptors::filtered(filter2), output);
     //список адресов любой байт которых равен 46
     const auto filter3 =[](const IpV4Address& ip){return ip[0] == 46 || ip[1] == 46 || ip[2] == 46 || ip[3] == 46;};
-    boost::copy(addresses | boost::adaptors::filtered(filter3), output);
+    boost::range::copy(addresses | boost::adaptors::filtered(filter3), output);
 
 }
