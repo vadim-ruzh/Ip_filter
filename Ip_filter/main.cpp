@@ -12,10 +12,9 @@ int main()
     const std::string pathToFile{ R"(C:\ProgramData\ip_filter.tsv)" };
     const std::ostream_iterator<ip::v4::Address> output(std::cout, "\n");
 
-
     ipCollection addresses;
     FileReader(pathToFile).Search(boost::is_any_of("\n"),
-										ip::v4::ipV4RegExpr,
+										ip::v4::regularExpression,
 											std::back_inserter(addresses));
 
     boost::range::sort(addresses, std::greater<ip::v4::Address>());
