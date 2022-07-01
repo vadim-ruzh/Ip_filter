@@ -16,12 +16,19 @@ namespace ip
             return mAddress[1] == 255 || mAddress[2] == 255 || mAddress[3] == 255;
         }
 
-        uint8_t Address::ConvertStringToOctet(const std::string& str) const
+        uint8_t Address::StringToOctet(const boost::string_view& str) const
         {
-            return boost::numeric_cast<uint8_t>(std::stoul(str));
+            try
+            {
+                return boost::numeric_cast<uint8_t>(std::stoul(str.to_string()));
+            }
+            catch (boost::bad_numeric_cast&)
+            {
+                throw std::runtime_error("The octet value are incorrect");
+            }
         }
 
-        std::string Address::ConvertOctetToString(const uint8_t& octet) const 
+        std::string Address::OctetToString(const uint8_t& octet) const 
         {
             std::stringstream ssm;
 
