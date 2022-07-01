@@ -17,29 +17,22 @@ namespace ip
 
 	namespace v4 
 	{
-		static const boost::regex regularExpression{ R"((\d+\.\d+\.\d+\.\d+))" };
+		static const boost::regex ipV4RegExpr{ R"((\d+\.\d+\.\d+\.\d+))" };
 
-		class Address : public BasicAddress<uint8_t, 4, '.'>,public IIpAddress
+		class Address : public BasicAddress<uint8_t, 4,'.'>, public IIpAddress
 		{
 		public:
 			template<typename T>
 			explicit Address(const T& val)
 			{
-				this->SetAddress(val);
-			}
-
-			template<typename T>
-			Address& operator=(const T& value)
-			{
-				this->SetAddress(value);
-				return *this;
+				SetAddress(val);
 			}
 
 			bool IsLoopback() const override;
 			bool IsBroadcast() const override;
 		protected:
-			uint8_t ConvertStringToOctet(const std::string& str) const override ;
-			std::string ConvertOctetToString(const uint8_t& octet) const override;
+			uint8_t StringToOctet(const boost::string_view& str)  const override ;
+			std::string OctetToString(const uint8_t& octet) const override;
 		};
 	}
 }
