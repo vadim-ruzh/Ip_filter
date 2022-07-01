@@ -1,12 +1,10 @@
 #pragma once
 
 #include <array>
-#include <bitset>
-#include <cctype>
-#include <sstream>
-#include <string>
-#include <cstddef>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <cstddef>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/adaptors.hpp>
