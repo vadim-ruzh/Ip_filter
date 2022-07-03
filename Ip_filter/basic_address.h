@@ -11,13 +11,22 @@
 #include <boost/utility/string_view.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include "my_type_traits.h"
+#include <boost/operators.hpp>
+
 
 static constexpr unsigned BitsInByte = 8;
 
-template <typename Octet, std::size_t OctetsCount,char Delimiter>
-class BasicAddress
+template <typename Implementation>
+struct address_traits;
+
+template <typename Implementation>
+class BasicAddress : boost::totally_ordered<BasicAddress<Implementation>>
 {
 public:
+	using Octet = typename address_traits<Implementation>::Octet;
+	static constexpr size_t OctetsCount= address_traits<Implementation>::OctetsCount;
+	static constexpr char Delimiter = address_traits<Implementation>::Delimiter;
+
 	virtual ~BasicAddress() = default;
 
 	class OctetProxy
@@ -29,16 +38,19 @@ public:
 		OctetProxy(const OctetProxy& other) : mOwner(other.mOwner),mPos(other.mPos){}
 		OctetProxy& operator=(const OctetProxy& other)
 		{
-			mOwner = other.mOwner;
-			mPos = other.mPos;
+			if(other != this)
+			{
+				mOwner = other.mOwner;
+				mPos = other.mPos;
+			}
 
 			return *this;
 		}
 
 		template<typename T>
-		OctetProxy& operator=(T val)
+		std::enable_if_t<std::is_literal_type_v<T>, OctetProxy&> operator=(T val)
 		{
-			mOwner.mAddress[mPos] = mOwner.IntegralToOctet(val);
+			mOwner.mAddress[mPos] = boost::numeric_cast<Octet>(val);
 			return *this;
 		}
 		OctetProxy& operator=(const std::string& str)
@@ -83,25 +95,9 @@ public:
 	{
 		return lhs.mAddress == rhs.mAddress;
 	}
-	friend bool operator!=(const BasicAddress& lhs, const BasicAddress& rhs)
-	{
-		return lhs.mAddress != rhs.mAddress;
-	}
 	friend bool operator<(const BasicAddress& lhs, const BasicAddress& rhs)
 	{
 		return lhs.mAddress < rhs.mAddress;
-	}
-	friend bool operator>(const BasicAddress& lhs, const BasicAddress& rhs)
-	{
-		return lhs.mAddress > rhs.mAddress;
-	}
-	friend bool operator<=(const BasicAddress& lhs, const BasicAddress& rhs)
-	{
-		return lhs.mAddress <= rhs.mAddress;
-	}
-	friend bool operator>=(const BasicAddress& lhs, const BasicAddress& rhs)
-	{
-		return lhs.mAddress >= rhs.mAddress;
 	}
 
 	void SetAddress(boost::string_view source) noexcept(false)
@@ -118,19 +114,19 @@ public:
 		}
 
 		boost::transform(tokens, mAddress.begin(),
-			[this](boost::string_view val) {return StringToOctet(val); });
+			[this](boost::string_view val) {return address_traits<Implementation>::StringToOctet(val); });
 
 	}
 	template<typename T>
 	std::enable_if_t<is_container_v<T>, void> SetAddress(const T& source) noexcept(false)
 	{
-		if (source.size() != OctetsCount)
+		if (source.size() != mAddress.size())
 		{
 			throw std::runtime_error("The count of octets is incorrect");
 		}
 
 		boost::transform(source, mAddress.begin(), 
-			[this](const auto& val) {return IntegralToOctet(val); });
+			[this](const auto& val) {return boost::numeric_cast<Octet>(val); });
 	}
 	template<typename T>
 	std::enable_if_t<std::is_integral_v<T>, void> SetAddress(T source)
@@ -153,31 +149,17 @@ public:
 		auto addressIter = mAddress.begin();
 		while (addressIter != mAddress.end()-1)
 		{
-			buffer << this->OctetToString(*addressIter);
+			buffer << address_traits<Implementation>::OctetToString(*addressIter);
 			buffer << Delimiter;
 
 			++addressIter;
 		}
-		buffer << this->OctetToString(*addressIter);
+		buffer << address_traits<Implementation>::OctetToString(*addressIter);
 
 		return buffer.str();
 	}
 protected:
-	virtual std::string OctetToString(const Octet& octet) const = 0;
-	virtual Octet StringToOctet(const boost::string_view& str) const = 0;
-	template<typename T>
-	std::enable_if_t<std::is_integral_v<T>, Octet> IntegralToOctet(const T& val) const
-	{
-		try
-		{
-			return boost::numeric_cast<Octet>(val);
-		}
-		catch (boost::bad_numeric_cast&)
-		{
-			throw std::runtime_error("The octet value are incorrect");
-		}
-	}
-
 	std::array<Octet, OctetsCount> mAddress{};
 };
 
+	

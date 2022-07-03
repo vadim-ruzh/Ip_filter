@@ -140,7 +140,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="file_reader.cpp" />
-    <ClCompile Include="ip_v4_address.cpp" />
     <ClCompile Include="ip_v4_address.h" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
