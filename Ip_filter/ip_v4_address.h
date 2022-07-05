@@ -23,7 +23,7 @@ namespace ip
 		class AddressImpl : public BasicAddress<AddressImpl<Ty>> , IIpAddress
 		{
 		public:
-			using Octet = typename address_traits<AddressImpl>::Octet;
+			using octet_type = typename address_traits<AddressImpl>::octet_type;
 
 			template<typename T>
 			explicit AddressImpl(const T& val)
@@ -40,13 +40,13 @@ namespace ip
 				return this->mAddress[1] == 255 || this->mAddress[2] == 255 || this->mAddress[3] == 255;
 			}
 
-			static std::string OctetToString(const Octet& octet)
+			static std::string OctetToString(const octet_type& octet)
 			{
 				std::stringstream ssm;
 				ssm << static_cast<unsigned int>(octet);
 				return ssm.str();
 			}
-			static Octet StringToOctet(const boost::string_view& str)
+			static octet_type StringToOctet(const boost::string_view& str)
 			{
 				try
 				{
@@ -62,16 +62,16 @@ namespace ip
 		template <typename Ty>
 		struct address_traits<AddressImpl<Ty>>
 		{
-			using Octet = Ty;
+			using octet_type = Ty;
 			static constexpr size_t OctetsCount = 4;
 			static constexpr char Delimiter = '.';
 
-			static Octet StringToOctet(const boost::string_view& str)
+			static octet_type StringToOctet(const boost::string_view& str)
 			{
 				return AddressImpl<Ty>::StringToOctet(str);
 			}
 
-			static std::string OctetToString(const Octet& octet)
+			static std::string OctetToString(const octet_type& octet)
 			{
 				return AddressImpl<Ty>::OctetToString(octet);
 			}
@@ -80,4 +80,4 @@ namespace ip
 		using address = AddressImpl<uint8_t>;
 	}
 }
-
+ 
