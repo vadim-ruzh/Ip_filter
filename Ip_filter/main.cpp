@@ -18,7 +18,7 @@ int main()
 										ip::v4::ipV4RegExpr,
 											std::back_inserter(addresses));
 
-    boost::range::sort(addresses, std::greater<ip::v4::address>());
+	boost::range::sort(addresses, std::greater<ip::v4::address>());
 
     boost::range::copy(addresses | 
 						boost::adaptors::filtered(_1[1] == 1),output);

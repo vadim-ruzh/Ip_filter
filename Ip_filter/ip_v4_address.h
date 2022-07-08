@@ -31,15 +31,6 @@ namespace ip
 				this->SetAddress(val);
 			}
 
-			bool IsLoopback() const override
-			{
-				return this->mAddress[0] == 127;
-			}
-			bool IsBroadcast() const override
-			{
-				return this->mAddress[1] == 255 || this->mAddress[2] == 255 || this->mAddress[3] == 255;
-			}
-
 			static std::string OctetToString(const octet_type& octet)
 			{
 				std::stringstream ssm;
@@ -57,24 +48,23 @@ namespace ip
 					throw std::runtime_error("The octet value are incorrect");
 				}
 			}
+
+			bool IsLoopback() const override
+			{
+				return this->mAddress[0] == 127;
+			}
+			bool IsBroadcast() const override
+			{
+				return this->mAddress[1] == 255 || this->mAddress[2] == 255 || this->mAddress[3] == 255;
+			}
 		};
 
 		template <typename Ty>
 		struct address_traits<AddressImpl<Ty>>
 		{
-			using octet_type = Ty;
+			using octet_type = uint8_t;
 			static constexpr size_t OctetsCount = 4;
 			static constexpr char Delimiter = '.';
-
-			static octet_type StringToOctet(const boost::string_view& str)
-			{
-				return AddressImpl<Ty>::StringToOctet(str);
-			}
-
-			static std::string OctetToString(const octet_type& octet)
-			{
-				return AddressImpl<Ty>::OctetToString(octet);
-			}
 		};
 
 		using address = AddressImpl<uint8_t>;
