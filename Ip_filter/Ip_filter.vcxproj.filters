@@ -18,9 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="ip_v4_address.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="ip_v4_address.h">
       <Filter>Файлы заголовков</Filter>
     </ClCompile>
@@ -36,6 +33,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="basic_address.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="my_type_traits.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

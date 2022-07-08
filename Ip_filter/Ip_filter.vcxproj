@@ -140,7 +140,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="file_reader.cpp" />
-    <ClCompile Include="ip_v4_address.cpp" />
     <ClCompile Include="ip_v4_address.h" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -150,6 +149,7 @@
   <ItemGroup>
     <ClInclude Include="basic_address.h" />
     <ClInclude Include="file_reader.h" />
+    <ClInclude Include="my_type_traits.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
